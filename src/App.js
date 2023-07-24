@@ -101,20 +101,15 @@ export default function App() {
         const res = await fetch(
           `http://www.omdbapi.com/?i=tt3896198&apikey=${KEY}&s=${query}`
         );
-        if (!res) {
-          throw new Error("Something went wrong !");
-        }
+        if (!res.ok) throw new Error("Something went wrong !");
 
         const data = await res.json();
 
-        if (data.Response === "False") {
-          throw new Error("Movie not found !");
-        }
-
+        if (data.Response === "False") throw new Error("Movie not found !");
         setMovies(data.Search);
-      } catch (error) {
-        console.error(error.message);
-        setError(error.message);
+      } catch (e) {
+        console.error(e.message);
+        setError(e.message);
       } finally {
         setIsLoading(false);
       }
@@ -132,7 +127,7 @@ export default function App() {
       <Main>
         <Box>
           {isLoading && !error ? <Loader /> : <MovieList movies={movies} />}
-          {error && <Error message={error} />}
+          {error && <ErrorMessage message={error} />}
         </Box>
         <Box>
           <WatchedSummary watched={watched} />
@@ -143,7 +138,7 @@ export default function App() {
   );
 }
 
-function Error({ message }) {
+function ErrorMessage({ message }) {
   return (
     <p className="error">
       <span>🚨</span> {message}
