@@ -18,13 +18,5 @@ function Test() {
 root.render(
   <React.StrictMode>
     <App />
-    <StarRating
-      messages={["Terrible", "Bad", "Good", "Great", "Amazing"]}
-      maxRating={5}
-      size={30}
-      color="red"
-      className="star"
-    />
-    <Test />
   </React.StrictMode>
 );
