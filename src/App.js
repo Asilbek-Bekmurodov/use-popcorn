@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
+import { useMovies } from "./useMovies";
+import { useLocalStorageState } from "./useLocalStorageState";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
@@ -60,57 +62,11 @@ function Result({ movies }) {
 const KEY = "1fe12e90";
 
 export default function App() {
-  const [movies, setMovies] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [query, setQuery] = useState("interstellar");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [watched, setWatched] = useState(function () {
-    const storedValue = localStorage.getItem("watched");
-    return JSON.parse(storedValue);
-  });
+  const [watched, setWatched] = useLocalStorageState([], "watched");
 
-  useEffect(
-    function () {
-      const controller = new AbortController();
-      async function fetchData() {
-        try {
-          setIsLoading(true);
-          setError("");
-
-          const res = await fetch(
-            `http://www.omdbapi.com/?i=tt3896198&apikey=${KEY}&s=${query}`,
-            { signal: controller.signal }
-          );
-          if (!res.ok) throw new Error("Something went wrong !");
-
-          const data = await res.json();
-
-          if (data.Response === "False") throw new Error("Movie not found !");
-          setMovies(data.Search);
-          setError("");
-        } catch (e) {
-          if (e.name !== "AbortError") {
-            setError(e.message);
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      }
-      if (query?.length < 3) {
-        setError("");
-        setMovies([]);
-        return;
-      }
-
-      fetchData();
-      handleCloseMovie();
-      return function () {
-        controller.abort();
-      };
-    },
-    [query]
-  );
+  const { movies, isLoading, error } = useMovies(query);
 
   function handleSelect(id) {
     setSelectedId((c) => (c === id ? null : id));
@@ -128,13 +84,6 @@ export default function App() {
     setWatched((watched) => watched.filter((movie) => movie.ImdbID !== id));
     // localStorage.setItem("watched", JSON.stringify([...watched, item]));
   }
-
-  useEffect(
-    function () {
-      localStorage.setItem("watched", JSON.stringify(watched));
-    },
-    [watched]
-  );
 
   return (
     <>
@@ -399,7 +348,7 @@ function WatchedSummary({ watched }) {
         </p>
         <p>
           <span>⏳</span>
-          <span>{avgRuntime} min</span>
+          <span>{avgRuntime.toFixed(2)} min</span>
         </p>
       </div>
     </div>
